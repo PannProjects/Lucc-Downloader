@@ -30,16 +30,25 @@ app = Flask(__name__)
 # DETEKSI ENVIRONMENT (LOCAL vs PRODUCTION)
 # ============================================================
 
-# Cek apakah di Render.com atau lokal
-IS_PRODUCTION = os.environ.get('RENDER', False)
+# Cek apakah di Hugging Face Spaces, Render.com, atau lokal
+# SPACE_ID = environment variable yang ada di Hugging Face Spaces
+# RENDER = environment variable yang ada di Render.com
+IS_HUGGINGFACE = os.environ.get('SPACE_ID', False)
+IS_RENDER = os.environ.get('RENDER', False)
+IS_PRODUCTION = IS_HUGGINGFACE or IS_RENDER
 
-if IS_PRODUCTION:
-    # PRODUCTION MODE (Render.com)
-    # Gunakan folder /tmp karena Render bersifat ephemeral (file hilang saat restart)
-    DOWNLOAD_FOLDER = '/tmp/downloads'
-    # FFmpeg sudah diinstall via render-build.sh, pakai default system path
+if IS_HUGGINGFACE:
+    # HUGGING FACE SPACES MODE
+    # Folder /app/downloads sudah dibuat di Dockerfile dengan chmod 777
+    DOWNLOAD_FOLDER = '/app/downloads'
+    # FFmpeg diinstall via Dockerfile
     FFMPEG_PATH = '/usr/bin/ffmpeg'
-    print("🚀 Running in PRODUCTION mode (Render.com)")
+    print("🤗 Running in HUGGING FACE SPACES mode")
+elif IS_RENDER:
+    # RENDER.COM MODE
+    DOWNLOAD_FOLDER = '/tmp/downloads'
+    FFMPEG_PATH = '/usr/bin/ffmpeg'
+    print("🚀 Running in RENDER.COM mode")
 else:
     # LOCAL MODE (Development)
     DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloads')
@@ -49,7 +58,7 @@ else:
 
 # Buat folder downloads jika belum ada
 if not os.path.exists(DOWNLOAD_FOLDER):
-    os.makedirs(DOWNLOAD_FOLDER)
+    os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 print(f"📁 Download folder: {DOWNLOAD_FOLDER}")
 print(f"🔧 FFmpeg path: {FFMPEG_PATH}")
