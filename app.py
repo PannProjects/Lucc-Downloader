@@ -159,45 +159,80 @@ def get_video_info(url):
             if info is None:
                 return {'success': False, 'error': 'Tidak dapat mengambil info video. Video mungkin private atau tidak tersedia.'}
             
-            # Daftar resolusi yang umum dan familiar
-            # Tidak perlu deteksi dari video - langsung tampilkan pilihan standar
-            common_resolutions = [
-                {'resolution': '2160p', 'height': 2160, 'label': '4K Ultra HD'},
-                {'resolution': '1440p', 'height': 1440, 'label': '2K QHD'},
-                {'resolution': '1080p', 'height': 1080, 'label': 'Full HD'},
-                {'resolution': '720p', 'height': 720, 'label': 'HD'},
-                {'resolution': '480p', 'height': 480, 'label': 'SD'},
-                {'resolution': '360p', 'height': 360, 'label': 'Low'},
-                {'resolution': '240p', 'height': 240, 'label': 'Very Low'},
-                {'resolution': '144p', 'height': 144, 'label': 'Minimum'},
-            ]
+            # Deteksi resolusi REALTIME dari video
+            # Tapi normalize ke resolusi STANDAR yang familiar
+            standard_resolutions = {
+                2160: '2160p',  # 4K
+                1440: '1440p',  # 2K
+                1080: '1080p',  # Full HD
+                720: '720p',   # HD
+                480: '480p',   # SD
+                360: '360p',   # Low
+                240: '240p',   # Very Low
+                144: '144p',   # Minimum
+            }
             
+            available_heights = set()
+            
+            if info.get('formats'):
+                for f in info['formats']:
+                    height = f.get('height')
+                    has_video = f.get('vcodec') and f.get('vcodec') != 'none'
+                    
+                    if has_video and height and height > 0:
+                        # Normalize ke resolusi standar terdekat
+                        for std_height in sorted(standard_resolutions.keys(), reverse=True):
+                            if height >= std_height:
+                                available_heights.add(std_height)
+                                break
+                        else:
+                            # Jika lebih kecil dari 144p, masukkan 144p
+                            available_heights.add(144)
+            
+            # Buat format list dari resolusi yang tersedia
             formats = []
-            for res in common_resolutions:
+            for height in sorted(available_heights, reverse=True):
+                resolution = standard_resolutions[height]
+                
+                # Label berdasarkan height
+                if height >= 2160:
+                    label = '4K Ultra HD'
+                elif height >= 1440:
+                    label = '2K QHD'
+                elif height >= 1080:
+                    label = 'Full HD'
+                elif height >= 720:
+                    label = 'HD'
+                elif height >= 480:
+                    label = 'SD'
+                else:
+                    label = 'Low'
+                
                 formats.append({
-                    'format_id': res['resolution'],
-                    'resolution': res['resolution'],
-                    'height': res['height'],
+                    'format_id': resolution,
+                    'resolution': resolution,
+                    'height': height,
                     'ext': 'mp4',
                     'filesize': 0,
                     'filesize_mb': 0,
                     'fps': '',
                     'vcodec': '',
-                    'note': res['label']
+                    'note': label
                 })
             
-            # Tambahkan opsi Best Quality di awal
-            formats.insert(0, {
-                'format_id': 'best',
-                'resolution': 'Best Quality',
-                'height': 9999,
-                'ext': 'mp4',
-                'filesize': 0,
-                'filesize_mb': 0,
-                'fps': '',
-                'vcodec': '',
-                'note': 'Kualitas Terbaik'
-            })
+            # Jika tidak ada format terdeteksi, tambahkan default
+            if not formats:
+                formats.append({
+                    'format_id': 'best',
+                    'resolution': 'Best Quality',
+                    'height': 9999,
+                    'ext': 'mp4',
+                    'filesize': 0,
+                    'filesize_mb': 0,
+                    'fps': '',
+                    'vcodec': '',
+                    'note': 'Auto'
+                })
             
             return {
                 'success': True,
@@ -274,34 +309,42 @@ def download_video(url, format_type='mp4', resolution='best'):
             # Download sebagai video MP4
             output_file = os.path.join(DOWNLOAD_FOLDER, f'{title}.mp4')
             
-            # Tentukan format berdasarkan resolusi yang dipilih
+            # Parse resolusi
             if resolution == 'best' or resolution == 'Best Quality':
-                # Best quality - coba bestvideo+bestaudio, fallback ke best
-                format_spec = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best'
+                height = 9999  # Ambil tertinggi
             else:
-                # Parse resolusi (contoh: '720p' -> 720)
-                height = resolution.replace('p', '')
-                # Format dengan fallback chain yang lengkap
-                # Format yang ketat - hanya ambil resolusi yang diminta atau lebih rendah
-                # Tidak fallback ke kualitas tinggi
-                format_spec = (
-                    f'bestvideo[height<={height}]+bestaudio/'
-                    f'best[height<={height}]/'
-                    f'worstvideo+worstaudio/'
-                    f'worst'
-                )
+                height = int(resolution.replace('p', ''))
+            
+            # Format sederhana dan reliable:
+            # Prioritas: format yang sudah include audio (progressive)
+            # lalu fallback ke separate streams yang perlu merge
+            format_spec = (
+                f'best[height<={height}][ext=mp4]/'  # Progressive MP4
+                f'best[height<={height}]/'            # Progressive any format
+                f'bestvideo[height<={height}]+bestaudio/'  # Separate streams
+                f'best'                                # Ultimate fallback
+            )
             
             ydl_opts = {
                 'format': format_spec,
                 'outtmpl': os.path.join(DOWNLOAD_FOLDER, f'{title}.%(ext)s'),
-                'quiet': True,
-                'no_warnings': True,
+                'quiet': False,  # Show progress untuk debug
+                'no_warnings': False,
                 'ffmpeg_location': FFMPEG_PATH,
                 # Merge video + audio jadi MP4
                 'merge_output_format': 'mp4',
+                # Postprocessor: konversi ke H.264 MP4 yang compatible dengan semua player
+                'postprocessors': [{
+                    'key': 'FFmpegVideoRemuxer',
+                    'preferedformat': 'mp4',
+                }],
                 # Bypass restrictions
                 'geo_bypass': True,
                 'nocheckcertificate': True,
+                # Force recode jika perlu untuk compatibility
+                'postprocessor_args': {
+                    'ffmpeg': ['-c:v', 'libx264', '-c:a', 'aac', '-movflags', '+faststart']
+                },
             }
         
         # Jalankan download
