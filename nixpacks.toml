@@ -1,8 +1,10 @@
 # Nixpacks configuration for Railway
-# This ensures FFmpeg is installed
+# Ensures FFmpeg is installed for video processing
+
+providers = ["python"]
 
 [phases.setup]
-nixPkgs = ["python310", "ffmpeg"]
+nixPkgs = ["ffmpeg-full"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
