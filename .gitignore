@@ -1,0 +1,28 @@
+# ============================================================
+# GITIGNORE - File yang TIDAK akan diupload ke GitHub
+# ============================================================
+
+# Folder downloads (file hasil download user)
+downloads/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables (jika ada)
+.env

@@ -1,0 +1,5 @@
+# Flask - Web framework untuk backend
+flask>=3.0.0
+
+# yt-dlp - Engine download multi-platform (YouTube, TikTok, IG, FB, Twitter)
+yt-dlp>=2024.1.0
