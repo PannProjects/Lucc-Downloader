@@ -557,21 +557,34 @@
                     videoTitle.textContent = data.title;
                     videoUploader.textContent = data.uploader;
 
-                    // Populate dropdown resolusi
+                    // Populate dropdown resolusi dengan info lebih lengkap
                     resolutionSelect.innerHTML = '';
                     data.formats.forEach(format => {
                         const option = document.createElement('option');
                         option.value = format.resolution;
                         
-                        // Tampilkan ukuran file jika tersedia
+                        // Buat label yang informatif
                         let label = format.resolution;
-                        if (format.filesize > 0) {
+                        
+                        // Tambahkan ukuran file jika tersedia
+                        if (format.filesize_mb && format.filesize_mb > 0) {
+                            label += ` (~${format.filesize_mb} MB)`;
+                        } else if (format.filesize > 0) {
                             const sizeMB = (format.filesize / (1024 * 1024)).toFixed(1);
                             label += ` (~${sizeMB} MB)`;
                         }
+                        
+                        // Tambahkan FPS jika tersedia
+                        if (format.fps) {
+                            label += ` ${format.fps}fps`;
+                        }
+                        
                         option.textContent = label;
                         resolutionSelect.appendChild(option);
                     });
+                    
+                    // Tampilkan jumlah resolusi yang tersedia
+                    console.log(`Found ${data.formats.length} quality options for this video`);
 
                     // Tampilkan preview
                     videoPreview.classList.add('show');
@@ -626,57 +639,45 @@
             const resolution = resolutionSelect.value;
 
             // Tampilkan loading
-            showLoading('Mengunduh video...');
+            showLoading('Memproses video... Download akan dimulai otomatis');
 
             try {
-                // Kirim request download ke server
-                const response = await fetch('/download', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        url: currentUrl,
-                        format: selectedFormat,
-                        resolution: resolution
-                    })
-                });
+                // Buat form hidden untuk submit
+                // Ini lebih baik untuk file besar karena browser handle download langsung
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/download';
+                form.style.display = 'none';
 
-                hideLoading();
+                // Tambahkan input fields
+                const urlInput = document.createElement('input');
+                urlInput.type = 'hidden';
+                urlInput.name = 'url';
+                urlInput.value = currentUrl;
+                form.appendChild(urlInput);
 
-                // Cek apakah response adalah file atau JSON error
-                const contentType = response.headers.get('content-type');
+                const formatInput = document.createElement('input');
+                formatInput.type = 'hidden';
+                formatInput.name = 'format';
+                formatInput.value = selectedFormat;
+                form.appendChild(formatInput);
 
-                if (contentType && contentType.includes('application/json')) {
-                    // Response adalah JSON (error)
-                    const data = await response.json();
-                    showAlert(data.error);
-                } else {
-                    // Response adalah file (sukses)
-                    // Ambil nama file dari header
-                    const disposition = response.headers.get('content-disposition');
-                    let filename = 'download';
-                    if (disposition) {
-                        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-                        if (matches && matches[1]) {
-                            filename = matches[1].replace(/['"]/g, '');
-                        }
-                    }
+                const resInput = document.createElement('input');
+                resInput.type = 'hidden';
+                resInput.name = 'resolution';
+                resInput.value = resolution;
+                form.appendChild(resInput);
 
-                    // Convert response ke blob dan download
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
+                // Submit form (akan trigger download di browser)
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
 
-                    // Tampilkan sukses
-                    showAlert('Download berhasil! File sedang diunduh...', 'success');
-                }
+                // Tunggu sebentar lalu hide loading
+                setTimeout(() => {
+                    hideLoading();
+                    showAlert('Download sedang diproses! Cek folder Downloads Anda...', 'success');
+                }, 3000);
 
             } catch (error) {
                 hideLoading();

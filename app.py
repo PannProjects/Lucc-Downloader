@@ -142,6 +142,12 @@ def get_video_info(url):
         'no_warnings': True,        # Tidak tampilkan warning
         'extract_flat': False,      # Extract info lengkap
         'ffmpeg_location': FFMPEG_PATH,
+        'skip_download': True,      # Pastikan tidak download
+        'ignoreerrors': True,       # Ignore minor errors
+        'no_color': True,           # Disable color codes in output
+        # Bypass beberapa restriksi
+        'geo_bypass': True,
+        'nocheckcertificate': True,
     }
     
     try:
@@ -149,39 +155,47 @@ def get_video_info(url):
             # Extract info tanpa download
             info = ydl.extract_info(url, download=False)
             
-            # Ambil daftar format yang tersedia
+            # Cek apakah info berhasil diambil
+            if info is None:
+                return {'success': False, 'error': 'Tidak dapat mengambil info video. Video mungkin private atau tidak tersedia.'}
+            
+            # Daftar resolusi yang umum dan familiar
+            # Tidak perlu deteksi dari video - langsung tampilkan pilihan standar
+            common_resolutions = [
+                {'resolution': '2160p', 'height': 2160, 'label': '4K Ultra HD'},
+                {'resolution': '1440p', 'height': 1440, 'label': '2K QHD'},
+                {'resolution': '1080p', 'height': 1080, 'label': 'Full HD'},
+                {'resolution': '720p', 'height': 720, 'label': 'HD'},
+                {'resolution': '480p', 'height': 480, 'label': 'SD'},
+                {'resolution': '360p', 'height': 360, 'label': 'Low'},
+            ]
+            
             formats = []
-            seen_resolutions = set()  # Untuk menghindari duplikat
-            
-            if 'formats' in info:
-                for f in info['formats']:
-                    # Filter hanya format video dengan resolusi
-                    if f.get('height') and f.get('vcodec') != 'none':
-                        resolution = f"{f['height']}p"
-                        
-                        # Hindari duplikat resolusi
-                        if resolution not in seen_resolutions:
-                            seen_resolutions.add(resolution)
-                            formats.append({
-                                'format_id': f.get('format_id', ''),
-                                'resolution': resolution,
-                                'height': f['height'],
-                                'ext': f.get('ext', 'mp4'),
-                                'filesize': f.get('filesize') or f.get('filesize_approx', 0)
-                            })
-            
-            # Sort berdasarkan resolusi (tertinggi dulu)
-            formats.sort(key=lambda x: x['height'], reverse=True)
-            
-            # Jika tidak ada format terdeteksi, tambahkan default
-            if not formats:
+            for res in common_resolutions:
                 formats.append({
-                    'format_id': 'best',
-                    'resolution': 'Best Quality',
-                    'height': 0,
+                    'format_id': res['resolution'],
+                    'resolution': res['resolution'],
+                    'height': res['height'],
                     'ext': 'mp4',
-                    'filesize': 0
+                    'filesize': 0,
+                    'filesize_mb': 0,
+                    'fps': '',
+                    'vcodec': '',
+                    'note': res['label']
                 })
+            
+            # Tambahkan opsi Best Quality di awal
+            formats.insert(0, {
+                'format_id': 'best',
+                'resolution': 'Best Quality',
+                'height': 9999,
+                'ext': 'mp4',
+                'filesize': 0,
+                'filesize_mb': 0,
+                'fps': '',
+                'vcodec': '',
+                'note': 'Kualitas Terbaik'
+            })
             
             return {
                 'success': True,
@@ -220,8 +234,21 @@ def download_video(url, format_type='mp4', resolution='best'):
     
     try:
         # Ambil info video terlebih dahulu untuk nama file
-        with yt_dlp.YoutubeDL({'quiet': True, 'ffmpeg_location': FFMPEG_PATH}) as ydl:
+        info_opts = {
+            'quiet': True, 
+            'ffmpeg_location': FFMPEG_PATH,
+            'skip_download': True,
+            'geo_bypass': True,
+            'nocheckcertificate': True,
+            'ignoreerrors': True,
+        }
+        with yt_dlp.YoutubeDL(info_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            
+            # Cek apakah info berhasil diambil
+            if info is None:
+                return {'success': False, 'error': 'Tidak dapat mengambil info video. Video mungkin private atau tidak tersedia.'}
+            
             title = sanitize_filename(info.get('title', 'video'))
         
         # Tentukan output template
@@ -245,13 +272,23 @@ def download_video(url, format_type='mp4', resolution='best'):
             # Download sebagai video MP4
             output_file = os.path.join(DOWNLOAD_FOLDER, f'{title}.mp4')
             
-            # Tentukan format berdasarkan resolusi
+            # Tentukan format berdasarkan resolusi yang dipilih
             if resolution == 'best' or resolution == 'Best Quality':
-                format_spec = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                # Best quality - coba bestvideo+bestaudio, fallback ke best
+                format_spec = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best'
             else:
                 # Parse resolusi (contoh: '720p' -> 720)
                 height = resolution.replace('p', '')
-                format_spec = f'bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/best[height<={height}][ext=mp4]/best'
+                # Format dengan fallback chain yang lengkap
+                format_spec = (
+                    f'bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/'
+                    f'bestvideo[height<={height}]+bestaudio/'
+                    f'best[height<={height}][ext=mp4]/'
+                    f'best[height<={height}]/'
+                    f'bestvideo[ext=mp4]+bestaudio[ext=m4a]/'
+                    f'bestvideo+bestaudio/'
+                    f'best'
+                )
             
             ydl_opts = {
                 'format': format_spec,
@@ -261,6 +298,9 @@ def download_video(url, format_type='mp4', resolution='best'):
                 'ffmpeg_location': FFMPEG_PATH,
                 # Merge video + audio jadi MP4
                 'merge_output_format': 'mp4',
+                # Bypass restrictions
+                'geo_bypass': True,
+                'nocheckcertificate': True,
             }
         
         # Jalankan download
@@ -347,25 +387,30 @@ def download():
     """
     Route untuk memproses download video.
     
-    Request JSON:
+    Request (JSON atau Form):
     - url: Link video
     - format: 'mp3' atau 'mp4'
     - resolution: Resolusi yang dipilih (contoh: '720p')
     
     Response: File untuk didownload atau JSON error
     """
-    data = request.get_json()
+    # Support both JSON and form data
+    if request.is_json:
+        data = request.get_json()
+        url = data.get('url', '').strip()
+        format_type = data.get('format', 'mp4')
+        resolution = data.get('resolution', 'best')
+    else:
+        url = request.form.get('url', '').strip()
+        format_type = request.form.get('format', 'mp4')
+        resolution = request.form.get('resolution', 'best')
     
     # Validasi input
-    if not data or 'url' not in data:
+    if not url:
         return jsonify({
             'success': False,
             'error': 'URL tidak boleh kosong!'
         }), 400
-    
-    url = data['url'].strip()
-    format_type = data.get('format', 'mp4')
-    resolution = data.get('resolution', 'best')
     
     # Proses download
     result = download_video(url, format_type, resolution)
