@@ -168,6 +168,8 @@ def get_video_info(url):
                 {'resolution': '720p', 'height': 720, 'label': 'HD'},
                 {'resolution': '480p', 'height': 480, 'label': 'SD'},
                 {'resolution': '360p', 'height': 360, 'label': 'Low'},
+                {'resolution': '240p', 'height': 240, 'label': 'Very Low'},
+                {'resolution': '144p', 'height': 144, 'label': 'Minimum'},
             ]
             
             formats = []
@@ -280,14 +282,13 @@ def download_video(url, format_type='mp4', resolution='best'):
                 # Parse resolusi (contoh: '720p' -> 720)
                 height = resolution.replace('p', '')
                 # Format dengan fallback chain yang lengkap
+                # Format yang ketat - hanya ambil resolusi yang diminta atau lebih rendah
+                # Tidak fallback ke kualitas tinggi
                 format_spec = (
-                    f'bestvideo[height<={height}][ext=mp4]+bestaudio[ext=m4a]/'
                     f'bestvideo[height<={height}]+bestaudio/'
-                    f'best[height<={height}][ext=mp4]/'
                     f'best[height<={height}]/'
-                    f'bestvideo[ext=mp4]+bestaudio[ext=m4a]/'
-                    f'bestvideo+bestaudio/'
-                    f'best'
+                    f'worstvideo+worstaudio/'
+                    f'worst'
                 )
             
             ydl_opts = {
