@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donasi - Lutzz Downloader</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            /* Dark Theme Colors */
+            --bg-primary: #0a0a0f;
+            --bg-card: #1a1a24;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent-primary: #6366f1;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --border-color: #2a2a3a;
+            --radius-xl: 24px;
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Background Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .header { text-align: center; margin-bottom: 2rem; }
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .main-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .donation-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-top: 1.5rem;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .method-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .method-label {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .method-value {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: var(--accent-primary);
+        }
+
+        .qris-info {
+            background: rgba(99, 102, 241, 0.1);
+            color: #d8d8ff;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <a href="/" class="logo-text">Lutzz Downloader</a>
+        </header>
+
+        <a href="/" class="btn-back">
+            <i data-lucide="arrow-left" style="width: 18px;"></i> Kembali ke Beranda
+        </a>
+
+        <main class="main-card">
+            <i data-lucide="coffee" style="width: 48px; height: 48px; color: var(--accent-primary); margin-bottom: 1rem;"></i>
+            <h1>Dukungan & Donasi</h1>
+            <p style="color: var(--text-secondary);">Bantu kami menjaga server tetap hidup dan mengembangkan fitur baru dengan berdonasi seikhlasnya.</p>
+            
+            <div class="donation-box">
+                <div class="method-item">
+                    <span class="method-label"><i data-lucide="wallet" style="width:18px"></i> DANA</span>
+                    <span class="method-value">0895384661641</span>
+                </div>
+                
+                <div class="qris-info">
+                    <i data-lucide="qr-code" style="width:16px;vertical-align:middle;margin-right:4px;"></i> 
+                    Untuk <strong>QRIS</strong>, silakan chat admin.
+                </div>
+            </div>
+
+            <a href="/contact" style="display:inline-block; margin-top:1.5rem; color:var(--text-secondary); font-size:0.9rem;">Chat Admin untuk QRIS</a>
+        </main>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
