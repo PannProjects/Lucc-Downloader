@@ -119,8 +119,8 @@ def cleanup_old_files():
             filepath = os.path.join(DOWNLOAD_FOLDER, filename)
             if os.path.isfile(filepath):
                 file_age = current_time - os.path.getmtime(filepath)
-                # Hapus file yang lebih dari 10 menit (600 detik)
-                if file_age > 600:
+                # Hapus file yang lebih dari 1 menit
+                if file_age > 60:
                     os.remove(filepath)
                     print(f"🗑️ Cleanup: Deleted old file {filename}")
     except Exception as e:
