@@ -111,7 +111,7 @@ def delete_file_later(filepath, delay=60):
 def cleanup_old_files():
     """
     Membersihkan file yang sudah lama di folder downloads.
-    File lebih dari 10 menit akan dihapus.
+    File lebih dari 1 menit akan dihapus.
     """
     try:
         current_time = time.time()
@@ -119,12 +119,31 @@ def cleanup_old_files():
             filepath = os.path.join(DOWNLOAD_FOLDER, filename)
             if os.path.isfile(filepath):
                 file_age = current_time - os.path.getmtime(filepath)
-                # Hapus file yang lebih dari 1 menit
+                # Hapus file yang lebih dari 1 menit (60 detik)
                 if file_age > 60:
                     os.remove(filepath)
                     print(f"🗑️ Cleanup: Deleted old file {filename}")
     except Exception as e:
         print(f"⚠️ Cleanup error: {e}")
+
+
+def start_cleanup_scheduler():
+    """
+    Menjalankan cleanup otomatis setiap 60 detik di background.
+    """
+    def scheduler():
+        while True:
+            time.sleep(60)  # Tunggu 60 detik
+            cleanup_old_files()
+    
+    thread = threading.Thread(target=scheduler)
+    thread.daemon = True  # Thread akan mati saat app berhenti
+    thread.start()
+    print("🔄 Auto-cleanup scheduler started (every 60 seconds)")
+
+
+# Start cleanup scheduler saat app dimulai
+start_cleanup_scheduler()
 
 
 def get_video_info(url):
