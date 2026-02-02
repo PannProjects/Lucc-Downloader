@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tentang Kami - Lutzz Downloader</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Menggunakan style yang sama dengan index.html untuk konsistensi */
+        :root {
+            /* Dark Theme Colors */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent-primary: #6366f1;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --border-color: #2a2a3a;
+            --radius-md: 12px;
+            --radius-xl: 24px;
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Background Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .main-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent-primary);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-icon {
+            color: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <a href="/" class="logo-text">Lutzz Downloader</a>
+        </header>
+
+        <a href="/" class="btn-back">
+            <i data-lucide="arrow-left" style="width: 18px;"></i> Kembali ke Beranda
+        </a>
+
+        <main class="main-card">
+            <h1>Tentang Kami</h1>
+            <p>Lutzz Downloader adalah alat pengunduh video universal yang dirancang untuk memudahkan Anda menyimpan konten favorit dari berbagai platform media sosial.</p>
+            
+            <p>Kami mendukung berbagai platform populer:</p>
+            <ul class="feature-list">
+                <li class="feature-item"><i data-lucide="check-circle" class="feature-icon" style="width: 18px;"></i> YouTube</li>
+                <li class="feature-item"><i data-lucide="check-circle" class="feature-icon" style="width: 18px;"></i> TikTok (Tanpa Watermark)</li>
+                <li class="feature-item"><i data-lucide="check-circle" class="feature-icon" style="width: 18px;"></i> Instagram</li>
+                <li class="feature-item"><i data-lucide="check-circle" class="feature-icon" style="width: 18px;"></i> Twitter / X</li>
+                <li class="feature-item"><i data-lucide="check-circle" class="feature-icon" style="width: 18px;"></i> Facebook</li>
+            </ul>
+
+            <p>Aplikasi ini dibuat dengan ❤️ untuk memberikan pengalaman download yang cepat, mudah, dan gratis tanpa iklan yang mengganggu.</p>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
